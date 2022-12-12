@@ -171,7 +171,7 @@ class ARCSIParamsObj(object):
         aotLUT = False
         fileEnding2Keep = None
         cloud_methods = None
-        flat_out_dir = False
+        flat_out_dir = True
 
 def prepParametersObj(
     inputHeader,
@@ -2439,6 +2439,10 @@ def runARCSI(
 
 def _runARCSIPart1(paramsObj):
     try:
+
+        # cgi debug:
+        print(f"_runARCSIPart1 paramsObj = {paramsObj}, dir on {dir(paramsObj)}")
+
         # Check Input image(s) is valid before proceeding.
         checkForValidInput(paramsObj)
 

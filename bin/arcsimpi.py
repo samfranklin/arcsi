@@ -857,7 +857,15 @@ if (__name__ == "__main__") and (mpiRank == 0):
 
             try:
 
-                ######### Initialise and parameters object. #########
+            ######### Initialise and parameters object. #########
+                if DEBUG:
+                    print("DEBUG-master PART 0 || ", 
+                        "time:", 
+                        time.asctime(), 
+                        "Running on node:",MPI.Get_processor_name()",
+                        "Start initialisation",
+                        flush=True)
+
                 inputHeadersLst = rsgislib.tools.utils.read_text_file_to_list(
                     args.inputheaders
                 )
@@ -944,6 +952,18 @@ if (__name__ == "__main__") and (mpiRank == 0):
                         if paramsObj.prodsToCalc["METADATA"]:
                             exportMetaData = True
                         first = False
+
+
+                if DEBUG:
+
+                    print(f"paramsLst = {paramsLst}")
+
+                    print("DEBUG-master PART 0 || ", 
+                        "time:", 
+                        time.asctime(), 
+                        "Running on node:",MPI.Get_processor_name()",
+                        "End initialisation",
+                        flush=True)
                 ##############################
 
                 ######### RUN PART 1 #########
