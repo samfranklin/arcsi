@@ -862,7 +862,7 @@ if (__name__ == "__main__") and (mpiRank == 0):
                     print("DEBUG-master PART 0 || ", 
                         "time:", 
                         time.asctime(), 
-                        "Running on node:",MPI.Get_processor_name()",
+                        "Running on node:",MPI.Get_processor_name(),
                         "Start initialisation",
                         flush=True)
 
