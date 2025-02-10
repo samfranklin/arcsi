@@ -65,6 +65,18 @@ import arcsilib.arcsiutils
 from .arcsiexception import ARCSIException
 from .arcsisensor import ARCSIAbstractSensor
 
+##DEBUG-CGI
+import inspect
+import sys
+from datetime import timezone
+
+def print_logstring():
+    """
+    add current timestamp to debug print statements
+    """
+    utc_now = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    log_string = f"Timestamp={utc_now}"
+    return log_string
 
 class ARCSISen2SpectralBandObj(object):
     """
@@ -2412,7 +2424,7 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
     def generateValidImageDataMask(
         self, outputPath, outputMaskName, viewAngleImg, outFormat
     ):
-        print("Generate valid image mask")
+        print("Generate valid image mask", file=sys.stderr)
         # Generate the valid image mask
         outputImage = os.path.join(outputPath, outputMaskName)
         inImgBands = []
@@ -2531,7 +2543,7 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
         return outputImage
 
     def generateImageSaturationMask(self, outputPath, outputName, outFormat):
-        print("Generate Saturation Image")
+        print("Generate Saturation Image", file=sys.stderr)
         outputImage = os.path.join(outputPath, outputName)
 
         s2Band = collections.namedtuple(
@@ -2710,7 +2722,7 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
     def convertImageToRadiance(
         self, outputPath, outputReflName, outputThermalName, outFormat
     ):
-        print("Converting to Radiance")
+        print("Converting to Radiance", file=sys.stderr)
         outputReflImage = os.path.join(outputPath, outputReflName)
         outputThermalImage = None
 
@@ -2926,7 +2938,7 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
     def convertImageToTOARefl(
         self, inputRadImage, outputPath, outputName, outFormat, scaleFactor
     ):
-        print("Converting to TOA")
+        print("Converting to TOA", file=sys.stderr)
         self.imgIntScaleFactor = scaleFactor
 
         outputImage = os.path.join(outputPath, outputName)
@@ -3356,6 +3368,7 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
     def calc6SCoefficients(
         self, aeroProfile, atmosProfile, grdRefl, surfaceAltitude, aotVal, useBRDF
     ):
+        
         sixsCoeffs = numpy.zeros((10, 6), dtype=numpy.float32)
         # Set up 6S model
         s = Py6S.SixS()
@@ -3454,12 +3467,19 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
         sixsCoeffs[4, 5] = float(s.outputs.values["environmental_irradiance"])
 
         # RE B7
+        print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'DEBUG VARS :: self.specBandInfo["B7"] :: Band name = RE B7 | GOOD BAND', flush=True)
+        print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'DEBUG VARS :: B7 vars(self.specBandInfo["B7"] = {vars(self.specBandInfo["B7"])}', flush=True)
+        print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'DEBUG VARS :: B7 "s" object vars = {vars(s)}', flush=True)
         s.wavelength = Py6S.Wavelength(
             self.specBandInfo["B7"].wvLenMin6S,
             self.specBandInfo["B7"].wvLenMax6S,
             self.specBandInfo["B7"].respFunc6S,
         )
         s.run()
+        print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'DEBUG VARS :: B7 s.outputs.values', flush=True)
+        for key, value in s.outputs.values.items():
+            print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'DEBUG VARS :: B7 s.outputs.values | key={key} | value={value}', flush=True)
+        
         sixsCoeffs[5, 0] = float(s.outputs.values["coef_xa"])
         sixsCoeffs[5, 1] = float(s.outputs.values["coef_xb"])
         sixsCoeffs[5, 2] = float(s.outputs.values["coef_xc"])
@@ -3468,12 +3488,19 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
         sixsCoeffs[5, 5] = float(s.outputs.values["environmental_irradiance"])
 
         # NIR B8
+        print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'DEBUG VARS :: self.specBandInfo["B8"] :: Band name = NIR B8 | ERROR BAND', flush=True)
+        print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'DEBUG VARS :: B8 vars(self.specBandInfo["B8"] = {vars(self.specBandInfo["B8"])}', flush=True)
+        print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'DEBUG VARS :: B8 "s" object vars = {vars(s)}', flush=True)
         s.wavelength = Py6S.Wavelength(
             self.specBandInfo["B8"].wvLenMin6S,
             self.specBandInfo["B8"].wvLenMax6S,
             self.specBandInfo["B8"].respFunc6S,
         )
         s.run()
+        print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'DEBUG VARS :: B8 s.outputs.values', flush=True)
+        for key, value in s.outputs.values.items():
+            print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'DEBUG VARS :: B8 s.outputs.values | key={key} | value={value}', flush=True)
+        
         sixsCoeffs[6, 0] = float(s.outputs.values["coef_xa"])
         sixsCoeffs[6, 1] = float(s.outputs.values["coef_xb"])
         sixsCoeffs[6, 2] = float(s.outputs.values["coef_xc"])
@@ -3539,15 +3566,21 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
         useBRDF,
         scaleFactor,
     ):
-        print("Converting to Surface Reflectance")
+        print("Converting to Surface Reflectance", file=sys.stderr)
         outputImage = os.path.join(outputPath, outputName)
 
         imgBandCoeffs = list()
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"START  : calc6SCoefficients", file=sys.stderr)
         sixsCoeffs = self.calc6SCoefficients(
             aeroProfile, atmosProfile, grdRefl, surfaceAltitude, aotVal, useBRDF
         )
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"FINSIH : calc6SCoefficients", file=sys.stderr)
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"PRINT  sixsCoeffs TYPE   : {type(sixsCoeffs)}", file=sys.stderr)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"PRINT  sixsCoeffs VALUES : {sixsCoeffs}", file=sys.stderr)
+
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"START  : rsgislib.imagecalibration.Band6SCoeff", file=sys.stderr)
         imgBandCoeffs.append(
             rsgislib.imagecalibration.Band6SCoeff(
                 band=1,
@@ -3658,6 +3691,9 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
                 EnvIrr=float(sixsCoeffs[9, 5]),
             )
         )
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"FINISH : rsgislib.imagecalibration.Band6SCoeff", file=sys.stderr)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"PRINT : imgBandCoeffs VALUES {imgBandCoeffs}", file=sys.stderr)
+        
 
         rsgislib.imagecalibration.apply_6s_coeff_single_param(
             inputRadImage,
@@ -3688,11 +3724,56 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
         scaleFactor,
         elevCoeffs=None,
     ):
-        print("Converting to Surface Reflectance")
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" START (WITHIN FUNCITON) in arcsisensorsentinel2.py : convertImageToSurfaceReflDEMElevLUT ",
+            flush=True)
+
+        print("Converting to Surface Reflectance", file=sys.stderr)
         outputImage = os.path.join(outputPath, outputName)
 
         if elevCoeffs is None:
-            print("Build an LUT for elevation values.")
+
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"LOGIC (in arcsisensorsentinel2.py) : elevCoeffs={elevCoeffs}",
+                flush=True)
+            print("Build an LUT for elevation values.", file=sys.stderr)
+
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"START (in arcsisensorsentinel2.py) : buildElevation6SCoeffLUT",
+                flush=True)
+            
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"DEBUG PARAMS self.buildElevation6SCoeffLUT",
+                flush=True)
+
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"DEBUG PARAMS :: aeroProfile={aeroProfile}",
+                flush=True)
+            
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"DEBUG PARAMS :: atmosProfile={atmosProfile}",
+                flush=True)
+
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"DEBUG PARAMS :: grdRefl={grdRefl}",
+                flush=True)
+                        
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"DEBUG PARAMS :: aotVal={aotVal}",
+                flush=True)
+
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"DEBUG PARAMS :: useBRDF={useBRDF}",
+                flush=True)
+
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"DEBUG PARAMS :: surfaceAltitudeMin={surfaceAltitudeMin}",
+                flush=True)
+            
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"DEBUG PARAMS :: surfaceAltitudeMax={surfaceAltitudeMax}",
+                flush=True)
+            
             elev6SCoeffsLUT = self.buildElevation6SCoeffLUT(
                 aeroProfile,
                 atmosProfile,
@@ -3702,7 +3783,31 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
                 surfaceAltitudeMin,
                 surfaceAltitudeMax,
             )
-            print("LUT has been built.")
+
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"FINISH (in arcsisensorsentinel2.py) : buildElevation6SCoeffLUT",
+                flush=True)
+
+            print("LUT has been built.", file=sys.stderr)
+
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"OUTPUT CONTENTS OF elev6SCoeffsLUT",
+                flush=True)
+
+            # get elevation
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"elev6SCoeffsLUT[0].Elev={elev6SCoeffsLUT[0].Elev}",
+                flush=True)
+            
+            # get size of list (should be 9, with 0 to 9 items)
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                f"len(elev6SCoeffsLUT[0].Coeffs)={len(elev6SCoeffsLUT[0].Coeffs)}",
+                flush=True)
+            
+            # print values output from function
+            bands=[0,6]
+            for i in bands:
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f'elev6SCoeffsLUT[0].Coeffs[{i}]={elev6SCoeffsLUT[0].Coeffs[i]}', flush=True)
 
             elevCoeffs = list()
             for elevLUT in elev6SCoeffsLUT:
@@ -3825,6 +3930,34 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
                     )
                 )
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" START (WITHIN FUNCITON) in arcsisensorsentinel2.py : rsgislib.imagecalibration.apply_6s_coeff_elev_lut_param ",
+            flush=True)
+        
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" DEBUG VARS : START",flush=True)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" inputRadImage={inputRadImage}",
+            flush=True)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" inputDEMFile={inputDEMFile}",
+            flush=True)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" outputImage={outputImage}",
+            flush=True)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" outFormat={outFormat}",
+            flush=True)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" rsgislib.TYPE_16UINT={rsgislib.TYPE_16UINT}",
+            flush=True)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" scaleFactor={scaleFactor}",
+            flush=True)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" elevCoeffs={elevCoeffs}",
+            flush=True)
+
         rsgislib.imagecalibration.apply_6s_coeff_elev_lut_param(
             inputRadImage,
             inputDEMFile,
@@ -3836,6 +3969,16 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
             True,
             elevCoeffs,
         )
+
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" FINISH (WITHIN FUNCITON) in arcsisensorsentinel2.py : rsgislib.imagecalibration.apply_6s_coeff_elev_lut_param ",
+            flush=True)
+
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+            f" FINISH (WITHIN FUNCITON) in arcsisensorsentinel2.py : convertImageToSurfaceReflDEMElevLUT ",
+            flush=True)
+
+
         return outputImage, elevCoeffs
 
     def convertImageToSurfaceReflAOTDEMElevLUT(
@@ -3857,11 +4000,11 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
         scaleFactor,
         elevAOTCoeffs=None,
     ):
-        print("Converting to Surface Reflectance")
+        print("Converting to Surface Reflectance", file=sys.stderr)
         outputImage = os.path.join(outputPath, outputName)
 
         if elevAOTCoeffs is None:
-            print("Build an LUT for elevation and AOT values.")
+            print("Build an LUT for elevation and AOT values.", file=sys.stderr)
             elevAOT6SCoeffsLUT = self.buildElevationAOT6SCoeffLUT(
                 aeroProfile,
                 atmosProfile,
@@ -4030,6 +4173,7 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
         print(
             "Testing AOD Val: ",
             aotVal,
+            file=sys.stderr
         )
         s = Py6S.SixS()
         s.atmos_profile = atmosProfile
@@ -4067,7 +4211,7 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
         tmpVal = (aX * radBlueVal) - bX
         reflBlueVal = tmpVal / (1.0 + cX * tmpVal)
         outDist = math.sqrt(math.pow((reflBlueVal - predBlueVal), 2))
-        print("\taX: ", aX, " bX: ", bX, " cX: ", cX, "     Dist = ", outDist)
+        print("\taX: ", aX, " bX: ", bX, " cX: ", cX, "     Dist = ", outDist, file=sys.stderr)
         return outDist
 
     def findDDVTargets(self, inputTOAImage, outputPath, outputName, outFormat, tmpPath):
@@ -4161,7 +4305,7 @@ class ARCSISentinel2Sensor(ARCSIAbstractSensor):
             dataset.GetRasterBand(10).SetDescription("SWIR2")
             dataset = None
         else:
-            print("Could not open image to set band names: ", imageFile)
+            print("Could not open image to set band names: ", imageFile, file=sys.stderr)
 
     def cleanLocalFollowProcessing(self):
         if not self.debugMode:

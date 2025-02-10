@@ -66,6 +66,8 @@ from arcsilib import ARCSI_VERSION, ARCSI_WEBSITE
 
 from .arcsiexception import ARCSIException
 
+# CGI-DEBUG
+import inspect
 
 class ARCSIAbstractSensor(object):
     """
@@ -1136,7 +1138,8 @@ class ARCSIAbstractSensor(object):
         numElevSteps = int(math.ceil(elevRange) + 1)
         elevVal = surfaceAltitudeMin
         for i in range(numElevSteps):
-            print("Building LUT Elevation ", elevVal)
+            print(f"##DEBUG-CGI | Current Function={inspect.currentframe().f_code.co_name}", f'PRINT :: CALLING self.calc6SCoefficients()', flush=True)
+            print("Building LUT Elevation ", elevVal, flush=True)
             lut.append(
                 rsgislib.imagecalibration.ElevLUTFeat(
                     Elev=elevVal,

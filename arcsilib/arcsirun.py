@@ -58,6 +58,10 @@ import arcsilib.arcsiutils
 from arcsilib.arcsiexception import ARCSIException
 from arcsilib.arcsisensor import ARCSIAbstractSensor
 
+##DEBUG-CGI
+from datetime import datetime, timezone
+import inspect
+import time
 
 class ARCSIParamsObj(object):
     def __init__(self):
@@ -1834,6 +1838,12 @@ def estimateSceneAOT(paramsObj):
 
 
 def calculateSREF(paramsObj):
+
+    print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"FLUSH TEST flush=True", flush=True)
+    print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"FLUSH TEST flush=False", flush=False)
+
+    print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"PRINT  : vars of paramsObj :{vars(paramsObj)}", file=sys.stderr)
+
     # Convert to Surface Reflectance using 6S Standard Models
     if paramsObj.prodsToCalc["SREF"]:
         if (paramsObj.prodsToCalc["DDVAOT"] or paramsObj.prodsToCalc["DOSAOT"]) and (
@@ -1841,7 +1851,10 @@ def calculateSREF(paramsObj):
         ):
             imgDS = gdal.Open(paramsObj.aotFile, gdal.GA_ReadOnly)
             imgBand = imgDS.GetRasterBand(1)
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"START  : imgBand.ComputeStatistics", file=sys.stderr)
             (min, max, mean, stddev) = imgBand.ComputeStatistics(False)
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"FINISH : imgBand.ComputeStatistics", file=sys.stderr)
+            
             print("AOT Mean (Std Dev) = " + str(mean) + " (" + str(stddev) + ")")
             print("AOT [Min, Max] = [" + str(min) + "," + str(max) + "]")
             aotVal = mean
@@ -1865,17 +1878,21 @@ def calculateSREF(paramsObj):
             )
 
         if paramsObj.aotVal is not None:
-            print("AOT Value: {}".format(paramsObj.aotVal))
+            print("AOT Value: {}".format(paramsObj.aotVal), " | ##DEBUG-CGI MODDED LOG", file=sys.stderr)
             paramsObj.calcdOutVals["ARCSI_AOT_VALUE"] = paramsObj.aotVal
 
         if paramsObj.demFile is None:
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                  f"LOGIC  : paramsObj.demFile={paramsObj.demFile}",
+                  file=sys.stderr)
             paramsObj.processSREFStr = "_rad_sref"
             outName = (
                 paramsObj.outBaseName
                 + paramsObj.processStageStr
                 + paramsObj.processSREFStr
                 + paramsObj.outFormatExt
-            )
+            )            
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"START  : paramsObj.sensorClass.convertImageToSurfaceReflSglParam", file=sys.stderr)
             paramsObj.srefImage = (
                 paramsObj.sensorClass.convertImageToSurfaceReflSglParam(
                     paramsObj.radianceImage,
@@ -1891,13 +1908,18 @@ def calculateSREF(paramsObj):
                     paramsObj.scaleFactor,
                 )
             )
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"FINISH : paramsObj.sensorClass.convertImageToSurfaceReflSglParam", file=sys.stderr)
             if paramsObj.fullImgOuts:
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                      f"LOGIC : paramsObj.fullImgOuts={paramsObj.fullImgOuts}",
+                      file=sys.stderr)
                 outName = (
                     paramsObj.outBaseName
                     + paramsObj.processStageWholeImgStr
                     + paramsObj.processSREFStr
                     + paramsObj.outFormatExt
                 )
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"START  : paramsObj.sensorClass.convertImageToSurfaceReflSglParam", file=sys.stderr)
                 paramsObj.sref6SWholeImage = (
                     paramsObj.sensorClass.convertImageToSurfaceReflSglParam(
                         paramsObj.radianceImageWhole,
@@ -1913,8 +1935,13 @@ def calculateSREF(paramsObj):
                         paramsObj.scaleFactor,
                     )
                 )
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"FINISH : paramsObj.sensorClass.convertImageToSurfaceReflSglParam", file=sys.stderr)
             paramsObj.calcdOutVals["ARCSI_ELEVATION_VALUE"] = paramsObj.surfaceAltitude
         else:
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                  f"LOGIC : paramsObj.demFile={paramsObj.demFile}",
+                  file=sys.stderr)
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f" START  : rsgislib.imagecalc.get_img_band_stats_in_env", file=sys.stderr)
             # Calc Min, Max Elevation for region intersecting with the image.
             statsElev = rsgislib.imagecalc.get_img_band_stats_in_env(
                 paramsObj.outDEMName,
@@ -1925,9 +1952,10 @@ def calculateSREF(paramsObj):
                 paramsObj.sensorClass.latBR,
                 paramsObj.sensorClass.latTL,
             )
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f" FINISH  : rsgislib.imagecalc.get_img_band_stats_in_env", file=sys.stderr)
 
-            print("Minimum Elevation = ", statsElev[0])
-            print("Maximum Elevation = ", statsElev[1])
+            print("Minimum Elevation = ", statsElev[0], " | ##DEBUG-CGI MODDED LOG", file=sys.stderr)
+            print("Maximum Elevation = ", statsElev[1], " | ##DEBUG-CGI MODDED LOG", file=sys.stderr)
 
             paramsObj.minElev = arcsilib.arcsiutils.findMinimumElev(statsElev[0])
             paramsObj.maxElev = arcsilib.arcsiutils.findMaximumElev(statsElev[1])
@@ -1945,10 +1973,17 @@ def calculateSREF(paramsObj):
                 " an LUT with ",
                 numElevSteps,
                 " will be created.",
+                " | ##DEBUG-CGI MODDED LOG", file=sys.stderr
             )
 
             if (paramsObj.aotFile is None) or (paramsObj.aotFile == ""):
-                print("Build an DEM LUT with AOT = " + str(paramsObj.aotVal) + "...")
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                      f" LOGIC  : paramsObj.aotFile={paramsObj.aotFile}",
+                      file=sys.stderr)
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                      f" PRINT  : paramsObj.aotFile IS EMPTY!",
+                      file=sys.stderr)
+                print("Build an DEM LUT with AOT = " + str(paramsObj.aotVal) + "...", " | ##DEBUG-CGI MODDED LOG", file=sys.stderr)
                 paramsObj.processSREFStr = "_rad_srefdem"
                 outName = (
                     paramsObj.outBaseName
@@ -1956,6 +1991,9 @@ def calculateSREF(paramsObj):
                     + paramsObj.processSREFStr
                     + paramsObj.outFormatExt
                 )
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                      f" START  : paramsObj.sensorClass.convertImageToSurfaceReflDEMElevLUT",
+                      flush=True)
                 (
                     paramsObj.srefImage,
                     paramsObj.sixsLUTCoeffs,
@@ -1974,13 +2012,22 @@ def calculateSREF(paramsObj):
                     paramsObj.maxElev,
                     paramsObj.scaleFactor,
                 )
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                      f" FINISH  : paramsObj.sensorClass.convertImageToSurfaceReflDEMElevLUT",
+                      flush=True)
                 if paramsObj.fullImgOuts:
+                    print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                        f" LOGIC : paramsObj.fullImgOuts={paramsObj.fullImgOuts}",
+                        flush=True)
                     outName = (
                         paramsObj.outBaseName
                         + paramsObj.processStageWholeImgStr
                         + paramsObj.processSREFStr
                         + paramsObj.outFormatExt
                     )
+                    print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                        f" START  : paramsObj.sensorClass.convertImageToSurfaceReflDEMElevLUT",
+                        flush=True)
                     (
                         paramsObj.sref6SWholeImage,
                         sixsLUTCoeffs,
@@ -2000,10 +2047,17 @@ def calculateSREF(paramsObj):
                         paramsObj.scaleFactor,
                         paramsObj.sixsLUTCoeffs,
                     )
+                    print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                        f" FINISH  : paramsObj.sensorClass.convertImageToSurfaceReflDEMElevLUT",
+                        flush=True)                    
                 # paramsObj.calcdOutVals['ARCSI_6S_COEFFICENTS'] = paramsObj.sixsLUTCoeffs
                 paramsObj.aotLUT = False
             else:
-                print("Build an AOT and DEM LUT...")
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',
+                  f"LOGIC : paramsObj.aotFile={paramsObj.aotFile}",
+                  file=sys.stderr)
+                print("Build an AOT and DEM LUT... | ##DEBUG-CGI MODDED LOG", file=sys.stderr)
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f" START  : rsgislib.imagecalc.get_img_band_stats_in_env", file=sys.stderr)
                 statsAOT = rsgislib.imagecalc.get_img_band_stats_in_env(
                     paramsObj.aotFile,
                     1,
@@ -2013,6 +2067,7 @@ def calculateSREF(paramsObj):
                     paramsObj.sensorClass.latBR,
                     paramsObj.sensorClass.latTL,
                 )
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f" FINISH  : rsgislib.imagecalc.get_img_band_stats_in_env", file=sys.stderr)
 
                 paramsObj.minAOT = arcsilib.arcsiutils.findMinimumAOT(statsAOT[0])
                 if paramsObj.minAOT < 0.01:
@@ -2032,6 +2087,7 @@ def calculateSREF(paramsObj):
                     " an LUT with ",
                     numAOTSteps,
                     " will be created.",
+                    " | ##DEBUG-CGI MODDED LOG", file=sys.stderr
                 )
                 paramsObj.processSREFStr = "_rad_srefdemaot"
                 outName = (
@@ -2040,6 +2096,7 @@ def calculateSREF(paramsObj):
                     + paramsObj.processSREFStr
                     + paramsObj.outFormatExt
                 )
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f" START  : sensorClass.convertImageToSurfaceReflAOTDEMElevLUT", file=sys.stderr)
                 (
                     paramsObj.srefImage,
                     paramsObj.sixsLUTCoeffs,
@@ -2060,7 +2117,11 @@ def calculateSREF(paramsObj):
                     paramsObj.maxAOT,
                     paramsObj.scaleFactor,
                 )
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f" FINISH  : sensorClass.convertImageToSurfaceReflAOTDEMElevLUT", file=sys.stderr)
                 if paramsObj.fullImgOuts:
+
+                    print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f" paramsObj.fullImgOuts = True", file=sys.stderr)
+                    print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f" START  : convertImageToSurfaceReflAOTDEMElevLUT", file=sys.stderr)
                     outName = (
                         paramsObj.outBaseName
                         + paramsObj.processStageWholeImgStr
@@ -2090,15 +2151,16 @@ def calculateSREF(paramsObj):
                     )
                 # paramsObj.calcdOutVals['ARCSI_6S_COEFFICENTS'] = paramsObj.sixsLUTCoeffs
                 paramsObj.aotLUT = True
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f" FINISH  : convertImageToSurfaceReflAOTDEMElevLUT", file=sys.stderr)
 
-        print("Setting Band Names...")
+        print("Setting Band Names... | ##DEBUG-CGI MODDED LOG", file=sys.stderr)
         paramsObj.sensorClass.setBandNames(paramsObj.srefImage)
         if paramsObj.fullImgOuts:
             paramsObj.sensorClass.setBandNames(paramsObj.sref6SWholeImage)
             paramsObj.finalOutFiles["SREF_DOS_IMG_WHOLE"] = paramsObj.sref6SWholeImage
 
         if paramsObj.calcStatsPy:
-            print("Calculating Statistics...")
+            print("Calculating Statistics... | ##DEBUG-CGI MODDED LOG", file=sys.stderr)
             rsgislib.imageutils.pop_img_stats(paramsObj.srefImage, True, 0.0, True)
             if paramsObj.fullImgOuts:
                 rsgislib.imageutils.pop_img_stats(
@@ -2108,7 +2170,7 @@ def calculateSREF(paramsObj):
         if paramsObj.fullImgOuts:
             paramsObj.finalOutFiles["SREF_6S_WHOLE_IMG"] = paramsObj.sref6SWholeImage
         paramsObj.prodsCalculated["SREF"] = True
-        print("")
+        print(" | ##DEBUG-CGI MODDED LOG", file=sys.stderr)
 
 
 def calculateStandarisedSREF(paramsObj):
@@ -2260,6 +2322,7 @@ def runARCSI(
     A function contains the main flow of the software
     """
     try:
+
         # Initialise and parameters object.
         paramsObj = None
         paramsObj = prepParametersObj(
@@ -2464,61 +2527,100 @@ def runARCSI(
 
 def _runARCSIPart1(paramsObj):
     try:
+
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"FLUSH TEST flush=True", flush=True)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"FLUSH TEST flush=False", flush=False)
+
+        step_start = time.time()
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START    : checkForValidInput" , file=sys.stderr)
         # Check Input image(s) is valid before proceeding.
         checkForValidInput(paramsObj)
+        step_stop = time.time()
+        elapsed_time = step_stop - step_start
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH   : checkForValidInput" , file=sys.stderr)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}',f"DURATION : checkForValidInput = {elapsed_time:.4f} seconds" , file=sys.stderr)
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : resampleBands" , file=sys.stderr)
         # Check if bands need resampling
         resampleBands(paramsObj)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : resampleBands" , file=sys.stderr)
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : mosaicInputImages" , file=sys.stderr)
         # Check if the image data needs mosaicking.
         mosaicInputImages(paramsObj)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : mosaicInputImages" , file=sys.stderr)
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : createValidMaskViewAngle" , file=sys.stderr)
         # Create valid image area mask and view angle images
         createValidMaskViewAngle(paramsObj)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : createValidMaskViewAngle" , file=sys.stderr)
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : createFootprint" , file=sys.stderr)
         # Create Vector Footprint
         createFootprint(paramsObj)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : createFootprint" , file=sys.stderr)
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : createSaturatedImage" , file=sys.stderr)
         # Create Saturated image
         createSaturatedImage(paramsObj)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : createSaturatedImage" , file=sys.stderr)
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : convertInputImageToRadiance" , file=sys.stderr)
         # Convert imagery to radiance
         convertInputImageToRadiance(paramsObj)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : convertInputImageToRadiance" , file=sys.stderr)
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : calcThermalBrightness" , file=sys.stderr)
         # Calculate Thermal Brightness
         calcThermalBrightness(paramsObj)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : calcThermalBrightness" , file=sys.stderr)
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : calcTOAReflectance" , file=sys.stderr)
         # Calculate TOA Reflectance
         calcTOAReflectance(paramsObj)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : calcTOAReflectance" , file=sys.stderr)
 
         # Save the process stage string for using with whole image outputs.
         paramsObj.processStageWholeImgStr = paramsObj.processStageStr
 
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : performCloudMasking" , file=sys.stderr)
         # Perform a cloud masking
         performCloudMasking(paramsObj)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : performCloudMasking" , file=sys.stderr)
 
         # Don't continue further if there is more than 95% cloud cover in the scene.
         if (not paramsObj.prodsToCalc["CLOUDS"]) or (
             paramsObj.prodsToCalc["CLOUDS"] and paramsObj.propOfCloud < 0.95
         ):
+
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : performClearSkyMasking" , file=sys.stderr)
             # Perform clear sky masking
             performClearSkyMasking(paramsObj)
+            print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : performClearSkyMasking" , file=sys.stderr)
 
             # Don't continue further if there is less than 5% of the scene of clear sky
             if (not paramsObj.prodsToCalc["CLEARSKY"]) or (
                 paramsObj.prodsToCalc["CLEARSKY"] and paramsObj.propOfClearSky > 0.05
             ):
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : prepareDEM" , file=sys.stderr)
                 # Prepare the DEM for later processing stages.
                 prepareDEM(paramsObj)
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : prepareDEM" , file=sys.stderr)
 
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : calcTopoShadowMask" , file=sys.stderr)
                 # Calculate Topographic shadow mask
                 calcTopoShadowMask(paramsObj)
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : calcTopoShadowMask" , file=sys.stderr)
 
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : performDOS" , file=sys.stderr)
                 # Perfrom Dark Object Subtraction (DOS)
                 performDOS(paramsObj)
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : performDOS" , file=sys.stderr)
 
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : estimateSceneAOT" , file=sys.stderr)
                 # Estimate AOT for the scene
                 estimateSceneAOT(paramsObj)
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH : estimateSceneAOT" , file=sys.stderr)
             else:
                 keys2Del = []
                 for key in paramsObj.prodsToCalc.keys():
@@ -2572,11 +2674,15 @@ def _runARCSIPart2(paramsObj):
                 paramsObj.prodsToCalc["CLEARSKY"] and paramsObj.propOfClearSky > 0.05
             ):
 
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : calculateSREF" , file=sys.stderr)
                 # Calculate SREF
                 calculateSREF(paramsObj)
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH  : calculateSREF" , file=sys.stderr)
 
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : calculateStandarisedSREF" , file=sys.stderr)
                 # Calculate Standarised SREF
                 calculateStandarisedSREF(paramsObj)
+                print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH  : calculateStandarisedSREF" , file=sys.stderr)
 
     except ARCSIException as e:
         print("Error: {}".format(e), file=sys.stderr)
@@ -2587,7 +2693,9 @@ def _runARCSIPart2(paramsObj):
 
 def _runARCSIPart3(paramsObj):
     try:
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : exportMetaData" , file=sys.stderr)
         exportMetaData(paramsObj)
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "FINISH  : exportMetaData" , file=sys.stderr)
     except ARCSIException as e:
         print("Error: {}".format(e), file=sys.stderr)
     except Exception as e:
@@ -2597,10 +2705,11 @@ def _runARCSIPart3(paramsObj):
 
 def _runARCSIPart4(paramsObj):
     try:
-        print("Clean up anything left over...")
-        paramsObj.sensorClass.cleanFollowProcessing(
-            paramsObj.outFilePath, paramsObj.fileEnding2Keep
-        )
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "DISABLED CLEANUP MANUALLY" , file=sys.stderr)
+        # print("Clean up anything left over...")
+        # paramsObj.sensorClass.cleanFollowProcessing(
+        #     paramsObj.outFilePath, paramsObj.fileEnding2Keep
+        # )
     except ARCSIException as e:
         print("Error: {}".format(e), file=sys.stderr)
     except Exception as e:
@@ -2669,6 +2778,10 @@ def runARCSIMulti(
     A function contains the main flow of the software
     """
     try:
+
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "START  : runARCSIMulti" , file=sys.stderr)
+
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', "Print inputHeaders = ", inputHeaders, file=sys.stderr)
 
         inputHeadersLst = rsgislib.tools.utils.read_text_file_to_list(inputHeaders)
         paramsLst = []
@@ -2757,6 +2870,9 @@ def runARCSIMulti(
                 if paramsObj.prodsToCalc["METADATA"]:
                     exportMetaData = True
                 first = False
+
+        #CGI-DEBUG
+        print("##DEBUG-CGI | ", print_logstring() , f' | Current Function={inspect.currentframe().f_code.co_name}', f"PRINT vars of paramsObj :{vars(paramsObj)}", file=sys.stderr)
 
         plObj = Pool(ncores)
         paramsLst = plObj.map(_runARCSIPart1, paramsLst)
@@ -2886,3 +3002,17 @@ def print2ConsoleListEnvVars():
     print("                       values can be either `TRUE' or `FALSE') option")
     print("ARCSI_SCALE_FACTOR     in place of the --scalefac option")
     print("")
+
+def print_logstring():
+    """
+    add current timestamp to debug print statements
+    """
+    utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    log_string = f"Timestamp={utc_now}"
+    return log_string
+
+def calc_step_duration(step_start, step_stop):
+    """
+    simple calc processing step duration
+    """
+    
